@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BSc Biological Sciences Utility</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-shape bg-shape-a" aria-hidden="true"></div>
+  <div class="bg-shape bg-shape-b" aria-hidden="true"></div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">🧬</span> Bio Utility</a>
+
+      <section class="fmt-panel" id="fmt-panel" aria-label="Result formatting">
+        <h2 class="side-title">Result Formatting</h2>
+        <div class="form-row">
+          <label for="fmt-mode">Number Format</label>
+          <select id="fmt-mode">
+            <option value="decimal">Decimal Places</option>
+            <option value="sigfig">Significant Figures</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="fmt-digits">Digits</label>
+          <input id="fmt-digits" type="number" min="1" max="12" value="4" />
+        </div>
+        <div class="form-row checkbox-row">
+          <label for="fmt-no-sci">
+            <input id="fmt-no-sci" type="checkbox" checked />
+            Avoid scientific notation
+          </label>
+        </div>
+      </section>
+
+      <nav class="side-nav" aria-label="Calculator navigation">
+        <div class="nav-group">
+          <p class="nav-group-title">Core Lab</p>
+          <a href="#dilution-card">Dilution</a>
+          <a href="#molarity-card">Molarity</a>
+          <a href="#saline-card">0.9% NaCl</a>
+          <a href="#converter-card">Unit Converter</a>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group-title">Biochemistry &amp; Molecular</p>
+          <a href="#spectro-card">Spectrophotometry</a>
+          <a href="#enzyme-card">Enzyme Kinetics</a>
+          <a href="#chrom-card">Chromatography</a>
+          <a href="#osmotic-card">Osmotic Pressure</a>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group-title">Cell Biology &amp; Physiology</p>
+          <a href="#growth-card">Growth Rate</a>
+          <a href="#fick-card">Fick's Law</a>
+          <a href="#darcy-card">Blood Flow</a>
+          <a href="#nernst-card">Nernst</a>
+          <a href="#cfu-card">CFU / mL</a>
+          <a href="#cell-card">Hemocytometer</a>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group-title">Immunoassays</p>
+          <a href="#elisa-card">ELISA Processor</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="content" id="top">
+      <header class="hero">
+        <h1>Calculations &amp; Converter Utility</h1>
+        <p class="subtitle">Lab-ready tools grouped by topic, with worked formulas and cleaner result formatting.</p>
+      </header>
+
+      <div class="topic-stack">
+    <section class="topic">
+      <h2 class="topic-title">Core Lab Calculators</h2>
+      <div class="grid">
+        <section class="card" id="dilution-card">
+          <h3>Dilution (C1V1 = C2V2)</h3>
+          <p class="hint">Find stock volume needed for a target concentration.</p>
+          <div class="form-row">
+            <label for="dil-c1">Stock Concentration C1</label>
+            <input id="dil-c1" type="number" min="0" step="any" placeholder="e.g. 100" />
+          </div>
+          <div class="form-row">
+            <label for="dil-c2">Final Concentration C2</label>
+            <input id="dil-c2" type="number" min="0" step="any" placeholder="e.g. 10" />
+          </div>
+          <div class="form-row">
+            <label for="dil-v2">Final Volume V2 (mL)</label>
+            <input id="dil-v2" type="number" min="0" step="any" placeholder="e.g. 50" />
+          </div>
+          <button data-calc="dilution">Calculate</button>
+          <p class="result" id="dilution-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="dilution-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="molarity-card">
+          <h3>Molarity</h3>
+          <p class="hint">Calculate molarity from mass, molecular weight, and volume.</p>
+          <div class="form-row">
+            <label for="mol-mass">Mass (g)</label>
+            <input id="mol-mass" type="number" min="0" step="any" placeholder="e.g. 5" />
+          </div>
+          <div class="form-row">
+            <label for="mol-mw">Molecular Weight Mr (g/mol)</label>
+            <input id="mol-mw" type="number" min="0" step="any" placeholder="e.g. 58.44" />
+          </div>
+          <div class="form-row">
+            <label for="mol-volume">Volume (L)</label>
+            <input id="mol-volume" type="number" min="0" step="any" placeholder="e.g. 0.5" />
+          </div>
+          <button data-calc="molarity">Calculate</button>
+          <p class="result" id="molarity-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="molarity-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="saline-card">
+          <h3>0.9% NaCl Molarity Example</h3>
+          <p class="hint">Using n = m/Mr and C = n/V for 0.9 g NaCl in 100 mL.</p>
+          <div class="form-row">
+            <label for="saline-mass">Mass m (g)</label>
+            <input id="saline-mass" type="number" min="0" step="any" value="0.9" />
+          </div>
+          <div class="form-row">
+            <label for="saline-volume">Volume V (mL)</label>
+            <input id="saline-volume" type="number" min="0" step="any" value="100" />
+          </div>
+          <div class="form-row">
+            <label for="saline-mr">Relative Molecular Mass Mr (g/mol)</label>
+            <input id="saline-mr" type="number" min="0" step="any" value="58.44" />
+          </div>
+          <button data-calc="saline">Calculate</button>
+          <p class="result" id="saline-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="saline-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="converter-card">
+          <h3>Unit Converter</h3>
+          <p class="hint">Convert common lab units for mass, volume, and temperature.</p>
+          <div class="form-row">
+            <label for="conv-type">Conversion Type</label>
+            <select id="conv-type">
+              <option value="mass">Mass</option>
+              <option value="volume">Volume</option>
+              <option value="temp">Temperature</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="conv-value">Value</label>
+            <input id="conv-value" type="number" step="any" placeholder="e.g. 25" />
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="conv-from">From</label>
+              <select id="conv-from"></select>
+            </div>
+            <div>
+              <label for="conv-to">To</label>
+              <select id="conv-to"></select>
+            </div>
+          </div>
+          <button data-calc="convert">Convert</button>
+          <p class="result" id="convert-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="convert-formula">Formula: -</div>
+          </details>
+        </section>
+      </div>
+    </section>
+
+    <section class="topic">
+      <h2 class="topic-title">Biochemistry and Molecular</h2>
+      <div class="grid">
+        <section class="card" id="spectro-card">
+          <h3>Spectrophotometry</h3>
+          <p class="hint">Use Beer-Lambert law to convert between absorbance, concentration, and transmittance.</p>
+          <div class="form-row">
+            <label for="spectro-mode">Solve For</label>
+            <select id="spectro-mode">
+              <option value="concentration">Concentration</option>
+              <option value="absorbance">Absorbance</option>
+              <option value="transmittance">Transmittance</option>
+            </select>
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="spectro-a">Absorbance A</label>
+              <input id="spectro-a" type="number" min="0" step="any" placeholder="e.g. 0.75" />
+            </div>
+            <div>
+              <label for="spectro-eps">Molar absorptivity epsilon</label>
+              <input id="spectro-eps" type="number" min="0" step="any" placeholder="e.g. 15000" />
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="spectro-path">Path length l (cm)</label>
+              <input id="spectro-path" type="number" min="0" step="any" value="1" />
+            </div>
+            <div>
+              <label for="spectro-c">Concentration c (mol/L)</label>
+              <input id="spectro-c" type="number" min="0" step="any" placeholder="e.g. 0.002" />
+            </div>
+          </div>
+          <button data-calc="spectro">Calculate</button>
+          <p class="result" id="spectro-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="spectro-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="enzyme-card">
+          <h3>Enzyme Kinetics</h3>
+          <p class="hint">Calculate Michaelis-Menten rates or estimate Km and Vmax from data.</p>
+          <div class="form-row">
+            <label for="enzyme-mode">Solve For</label>
+            <select id="enzyme-mode">
+              <option value="rate">Reaction rate v</option>
+              <option value="fit">Fit Km and Vmax from data</option>
+            </select>
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="enzyme-vmax">Vmax</label>
+              <input id="enzyme-vmax" type="number" min="0" step="any" placeholder="e.g. 120" />
+            </div>
+            <div>
+              <label for="enzyme-km">Km</label>
+              <input id="enzyme-km" type="number" min="0" step="any" placeholder="e.g. 15" />
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="enzyme-s">Substrate concentration [S]</label>
+              <input id="enzyme-s" type="number" min="0" step="any" placeholder="e.g. 30" />
+            </div>
+            <div>
+              <label for="enzyme-data">Data table for fit (S,v pairs, one per line)</label>
+              <textarea id="enzyme-data" rows="5" placeholder="10, 18&#10;20, 31&#10;40, 50"></textarea>
+            </div>
+          </div>
+          <button data-calc="enzyme">Calculate</button>
+          <p class="result" id="enzyme-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="enzyme-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="chrom-card">
+          <h3>Column Chromatography</h3>
+          <p class="hint">Use Ve = Vo + Kd(Vt - Vo) to solve common column chromatography values.</p>
+          <div class="form-row">
+            <label for="chrom-mode">Solve For</label>
+            <select id="chrom-mode">
+              <option value="ve">Elution volume Ve</option>
+              <option value="kd">Partition coefficient Kd</option>
+              <option value="vo">Void volume Vo</option>
+            </select>
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="chrom-vo">Void volume Vo (mL)</label>
+              <input id="chrom-vo" type="number" min="0" step="any" placeholder="e.g. 20" />
+            </div>
+            <div>
+              <label for="chrom-vt">Total bed volume Vt (mL)</label>
+              <input id="chrom-vt" type="number" min="0" step="any" placeholder="e.g. 100" />
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="chrom-kd">Partition coefficient Kd</label>
+              <input id="chrom-kd" type="number" min="0" step="any" placeholder="e.g. 0.4" />
+            </div>
+            <div>
+              <label for="chrom-ve">Elution volume Ve (mL)</label>
+              <input id="chrom-ve" type="number" min="0" step="any" placeholder="e.g. 48" />
+            </div>
+          </div>
+          <button data-calc="chrom">Calculate</button>
+          <p class="result" id="chrom-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="chrom-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="osmotic-card">
+          <h3>Osmotic Pressure (van't Hoff)</h3>
+          <p class="hint">Use Pi = iCRT to estimate osmotic pressure.</p>
+          <div class="form-row">
+            <label for="os-i">van't Hoff Factor (i)</label>
+            <input id="os-i" type="number" min="0" step="any" placeholder="e.g. 2 for NaCl" />
+          </div>
+          <div class="form-row">
+            <label for="os-c">Molar Concentration C (mol/L)</label>
+            <input id="os-c" type="number" min="0" step="any" placeholder="e.g. 0.154" />
+          </div>
+          <div class="form-row">
+            <label for="os-t">Temperature (K)</label>
+            <input id="os-t" type="number" min="0" step="any" placeholder="e.g. 298" />
+          </div>
+          <button data-calc="osmotic">Calculate</button>
+          <p class="result" id="osmotic-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="osmotic-formula">Formula: -</div>
+          </details>
+        </section>
+      </div>
+    </section>
+
+    <section class="topic">
+      <h2 class="topic-title">Cell Biology and Physiology</h2>
+      <div class="grid">
+        <section class="card" id="growth-card">
+          <h3>Growth Rate and Doubling Time</h3>
+          <p class="hint">Estimate growth constant k and doubling time.</p>
+          <div class="form-row">
+            <label for="gr-n0">Initial Cells / OD (N0)</label>
+            <input id="gr-n0" type="number" min="0" step="any" placeholder="e.g. 0.1" />
+          </div>
+          <div class="form-row">
+            <label for="gr-nt">Final Cells / OD (Nt)</label>
+            <input id="gr-nt" type="number" min="0" step="any" placeholder="e.g. 0.8" />
+          </div>
+          <div class="form-row">
+            <label for="gr-time">Time Interval (hours)</label>
+            <input id="gr-time" type="number" min="0" step="any" placeholder="e.g. 3" />
+          </div>
+          <button data-calc="growth">Calculate</button>
+          <p class="result" id="growth-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="growth-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="fick-card">
+          <h3>Fick's Law of Diffusion</h3>
+          <p class="hint">Calculate flux J or diffusion coefficient D using J = -D (dC/dx).</p>
+          <div class="form-row">
+            <label for="fick-solve">Solve For</label>
+            <select id="fick-solve">
+              <option value="J">Flux (J)</option>
+              <option value="D">Diffusion Coefficient (D)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="fick-d">Diffusion Coefficient D (m^2/s)</label>
+            <input id="fick-d" type="number" min="0" step="any" placeholder="e.g. 1e-9" />
+          </div>
+          <div class="form-row">
+            <label for="fick-dc">Concentration Difference DeltaC (mol/m^3)</label>
+            <input id="fick-dc" type="number" step="any" placeholder="e.g. 5" />
+          </div>
+          <div class="form-row">
+            <label for="fick-dx">Distance Deltax (m)</label>
+            <input id="fick-dx" type="number" min="0" step="any" placeholder="e.g. 0.001" />
+          </div>
+          <div class="form-row">
+            <label for="fick-j">Flux J (mol/m^2/s)</label>
+            <input id="fick-j" type="number" step="any" placeholder="Used when solving for D" />
+          </div>
+          <button data-calc="fick">Calculate</button>
+          <p class="result" id="fick-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="fick-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="darcy-card">
+          <h3>Blood Flow (Darcy's Law)</h3>
+          <p class="hint">Estimate volumetric flow rate through a porous pathway.</p>
+          <div class="form-row">
+            <label for="darcy-k">Permeability k (m^2)</label>
+            <input id="darcy-k" type="number" min="0" step="any" placeholder="e.g. 1e-12" />
+          </div>
+          <div class="form-row">
+            <label for="darcy-a">Area A (m^2)</label>
+            <input id="darcy-a" type="number" min="0" step="any" placeholder="e.g. 0.0001" />
+          </div>
+          <div class="form-row">
+            <label for="darcy-dp">Pressure Difference DeltaP (Pa)</label>
+            <input id="darcy-dp" type="number" step="any" placeholder="e.g. 1333" />
+          </div>
+          <div class="form-row">
+            <label for="darcy-mu">Dynamic Viscosity mu (Pa.s)</label>
+            <input id="darcy-mu" type="number" min="0" step="any" placeholder="e.g. 0.0035" />
+          </div>
+          <div class="form-row">
+            <label for="darcy-l">Path Length L (m)</label>
+            <input id="darcy-l" type="number" min="0" step="any" placeholder="e.g. 0.01" />
+          </div>
+          <button data-calc="darcy">Calculate</button>
+          <p class="result" id="darcy-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="darcy-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="nernst-card">
+          <h3>Nernst Equation</h3>
+          <p class="hint">Calculate equilibrium potential for ion concentration gradients.</p>
+          <div class="form-row">
+            <label for="nernst-out">Outside Concentration [out] (mM)</label>
+            <input id="nernst-out" type="number" min="0" step="any" placeholder="e.g. 145" />
+          </div>
+          <div class="form-row">
+            <label for="nernst-in">Inside Concentration [in] (mM)</label>
+            <input id="nernst-in" type="number" min="0" step="any" placeholder="e.g. 15" />
+          </div>
+          <div class="form-row">
+            <label for="nernst-z">Ion Valence z</label>
+            <input id="nernst-z" type="number" step="any" placeholder="e.g. 1 or -1" />
+          </div>
+          <div class="form-row">
+            <label for="nernst-t">Temperature (C)</label>
+            <input id="nernst-t" type="number" step="any" placeholder="e.g. 37" />
+          </div>
+          <button data-calc="nernst">Calculate</button>
+          <p class="result" id="nernst-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="nernst-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="cfu-card">
+          <h3>CFU per mL</h3>
+          <p class="hint">Calculate viable cell concentration from plate counts.</p>
+          <div class="form-row">
+            <label for="cfu-colonies">Colony Count</label>
+            <input id="cfu-colonies" type="number" min="0" step="1" placeholder="e.g. 135" />
+          </div>
+          <div class="form-row">
+            <label for="cfu-df">Dilution Factor</label>
+            <input id="cfu-df" type="number" min="0" step="any" placeholder="e.g. 1000" />
+          </div>
+          <div class="form-row">
+            <label for="cfu-volume">Volume Plated (mL)</label>
+            <input id="cfu-volume" type="number" min="0" step="any" placeholder="e.g. 0.1" />
+          </div>
+          <button data-calc="cfu">Calculate</button>
+          <p class="result" id="cfu-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="cfu-formula">Formula: -</div>
+          </details>
+        </section>
+
+        <section class="card" id="cell-card">
+          <h3>Hemocytometer Cell Count</h3>
+          <p class="hint">Estimate cells/mL from average grid count.</p>
+          <div class="form-row">
+            <label for="cell-avg">Average Cells per Large Square</label>
+            <input id="cell-avg" type="number" min="0" step="any" placeholder="e.g. 56" />
+          </div>
+          <div class="form-row">
+            <label for="cell-df">Dilution Factor</label>
+            <input id="cell-df" type="number" min="0" step="any" placeholder="e.g. 2" />
+          </div>
+          <button data-calc="cell">Calculate</button>
+          <p class="result" id="cell-result">Result: -</p>
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="cell-formula">Formula: -</div>
+          </details>
+        </section>
+      </div>
+    </section>
+
+    <section class="topic">
+      <h2 class="topic-title">Immunoassays</h2>
+      <div class="grid">
+        <section class="card elisa-card" id="elisa-card">
+          <h3>Direct ELISA Processor</h3>
+          <p class="hint">Paste a plate-reader grid, group rows by sample type, and back-calculate unknown concentrations from a standard curve.</p>
+
+          <div class="form-row">
+            <label for="elisa-plate-csv">Plate CSV (rows = plate rows, columns = wells)</label>
+            <textarea id="elisa-plate-csv" rows="6" placeholder="A, 0.04, 0.11, 0.22, 0.45, 0.88&#10;B, 0.05, 0.12, 0.23, 0.44, 0.90&#10;C, 0.31, 0.33, 0.30&#10;D, 0.62, 0.60, 0.64&#10;E, 0.04, 0.05, 0.04"></textarea>
+          </div>
+
+          <div class="form-row two-col">
+            <div>
+              <label for="elisa-std-rows">Standard rows</label>
+              <input id="elisa-std-rows" type="text" placeholder="e.g. A, B" value="A, B" />
+            </div>
+            <div>
+              <label for="elisa-blank-rows">Blank rows (optional)</label>
+              <input id="elisa-blank-rows" type="text" placeholder="e.g. E" value="E" />
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <div>
+              <label for="elisa-u1-rows">Unknown 1 rows</label>
+              <input id="elisa-u1-rows" type="text" placeholder="e.g. C" value="C" />
+            </div>
+            <div>
+              <label for="elisa-u2-rows">Unknown 2 rows</label>
+              <input id="elisa-u2-rows" type="text" placeholder="e.g. D" value="D" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="elisa-control-rows">Control rows (optional)</label>
+            <input id="elisa-control-rows" type="text" placeholder="e.g. F" />
+          </div>
+
+          <div class="form-row">
+            <label for="elisa-std-conc">Standard concentrations (column order)</label>
+            <input id="elisa-std-conc" type="text" placeholder="e.g. 0, 25, 50, 100, 200" value="0, 25, 50, 100, 200" />
+          </div>
+
+          <div class="form-row two-col">
+            <div>
+              <label for="elisa-fit-mode">X-axis fit</label>
+              <select id="elisa-fit-mode">
+                <option value="linear">Linear</option>
+                <option value="log10">Log10</option>
+              </select>
+            </div>
+            <div>
+              <label for="elisa-fit-range">Fit range (min, max conc; optional)</label>
+              <div class="form-row two-col">
+                <input id="elisa-fit-min" type="number" step="any" placeholder="min" />
+                <input id="elisa-fit-max" type="number" step="any" placeholder="max" />
+              </div>
+            </div>
+          </div>
+
+          <button data-calc="elisa">Process ELISA Data</button>
+          <p class="result" id="elisa-result">Result: -</p>
+
+          <details class="formula-box">
+            <summary>Formula and Working</summary>
+            <div class="formula" id="elisa-formula">Formula: -</div>
+          </details>
+
+          <div class="export-wrap">
+            <div class="export-head">
+              <label for="elisa-curve-csv">Standard-curve CSV (graph-ready)</label>
+              <button type="button" class="copy-btn" data-copy="elisa-curve-csv">Copy</button>
+            </div>
+            <textarea id="elisa-curve-csv" rows="5" readonly placeholder="Standard-curve table appears here after processing."></textarea>
+          </div>
+
+          <div class="export-wrap">
+            <div class="export-head">
+              <label for="elisa-summary-csv">Summary CSV (samples + estimates)</label>
+              <button type="button" class="copy-btn" data-copy="elisa-summary-csv">Copy</button>
+            </div>
+            <textarea id="elisa-summary-csv" rows="5" readonly placeholder="Sample summary appears here after processing."></textarea>
+          </div>
+        </section>
+      </div>
+    </section>
+      </div>
+
+      <footer>
+        <p>Made for coursework, practical reports, and lab prep. Verify assumptions for your protocol and supervisor guidance.</p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,636 @@
+:root {
+  color-scheme: light;
+
+  /* Biology-lab palette: agar cream, chlorophyll greens, specimen amber */
+  --bg: #e8f0e6;
+  --bg-2: #dfeadc;
+  --ink: #14271c;
+  --muted: #4a5f52;
+  --card: #fbfdf7;
+  --card-edge: #ffffff;
+  --line: #c4d8c6;
+  --membrane: #9cc3a6;
+  --accent: #2f8f6b;
+  --accent-strong: #1f6e51;
+  --accent-soft: #e6f2ea;
+  --specimen: #c2693a;
+  --specimen-soft: #f6e6dc;
+  --formula-bg: #f1f7ef;
+  --good: #2f8f6b;
+  --bad: #c0563f;
+  --shadow: 0 16px 38px rgba(20, 39, 28, 0.14);
+  --shadow-sm: 0 6px 16px rgba(20, 39, 28, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 2.2rem 1.25rem 3rem;
+  overflow-x: hidden;
+  font-family: "Outfit", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 6%, rgba(122, 191, 154, 0.35) 0, transparent 30%),
+    radial-gradient(circle at 88% 12%, rgba(194, 105, 58, 0.18) 0, transparent 26%),
+    /* faint scattered "cells under the microscope" */
+    radial-gradient(circle at 20% 80%, rgba(47, 143, 107, 0.10) 0 8px, transparent 9px),
+    radial-gradient(circle at 70% 30%, rgba(47, 143, 107, 0.08) 0 11px, transparent 12px),
+    radial-gradient(circle at 45% 55%, rgba(47, 143, 107, 0.06) 0 14px, transparent 15px),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
+}
+
+/* Decorative cell-like blobs with a nucleus ring */
+.bg-shape {
+  position: fixed;
+  z-index: -1;
+  border-radius: 48% 52% 55% 45% / 50% 48% 52% 50%;
+  opacity: 0.5;
+  filter: blur(1px);
+}
+
+.bg-shape::after {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.bg-shape-a {
+  width: 17rem;
+  height: 17rem;
+  background: radial-gradient(circle at 35% 35%, #8fcfae, #3f9e76);
+  left: -5rem;
+  bottom: -5rem;
+}
+
+.bg-shape-b {
+  width: 21rem;
+  height: 21rem;
+  background: radial-gradient(circle at 35% 35%, #e7b48f, #c2693a);
+  right: -7rem;
+  top: -7rem;
+  opacity: 0.32;
+}
+
+.layout {
+  max-width: 86rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 1.4rem;
+  align-items: start;
+}
+
+/* min-width:0 lets the content column shrink instead of overflowing
+   when a wide monospace formula line (.eq) sits inside it. */
+.content {
+  min-width: 0;
+}
+
+.sidebar {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--membrane);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 1.18rem;
+  color: var(--ink);
+}
+
+.brand-mark {
+  font-size: 1.35rem;
+}
+
+.fmt-panel {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: var(--card);
+}
+
+.fmt-panel .form-row {
+  margin-bottom: 0;
+}
+
+.side-title {
+  margin: 0 0 0.1rem;
+  font-size: 0.92rem;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  color: var(--accent-strong);
+}
+
+.side-nav {
+  display: grid;
+  gap: 0.05rem;
+}
+
+.nav-group {
+  display: grid;
+  gap: 0.05rem;
+  margin-bottom: 0.45rem;
+}
+
+.nav-group-title {
+  margin: 0.35rem 0 0.18rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.side-nav a {
+  display: block;
+  padding: 0.34rem 0.55rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.side-nav a:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.side-nav a.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-left-color: var(--accent);
+}
+
+.hero {
+  margin-bottom: 1.1rem;
+  animation: fade-slide 600ms ease both;
+}
+
+h1 {
+  margin: 0.55rem 0 0.2rem;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: clamp(1.9rem, 4.4vw, 3rem);
+  line-height: 1.04;
+  color: var(--ink);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  max-width: 60ch;
+  font-size: 1.02rem;
+}
+
+.topic-stack {
+  display: grid;
+  gap: 1.3rem;
+}
+
+.topic {
+  position: relative;
+  border: 1px solid var(--membrane);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.55);
+  padding: 1rem 1rem 1.15rem;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(3px);
+}
+
+.topic-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.1rem 0 0.85rem;
+  color: var(--accent-strong);
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.22rem;
+}
+
+.topic-title::before {
+  content: "";
+  width: 0.7rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--accent), var(--specimen));
+  flex: none;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+}
+
+.card {
+  position: relative;
+  background:
+    linear-gradient(180deg, var(--card-edge), var(--card));
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.15rem 1.1rem 1.2rem;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  scroll-margin-top: 1rem;
+  animation: fade-slide 600ms ease both;
+}
+
+.topic {
+  scroll-margin-top: 1rem;
+}
+
+/* "membrane" accent strip down the left edge of every card */
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+}
+
+.elisa-card::before {
+  background: linear-gradient(180deg, var(--specimen), #9e4f2c);
+}
+
+h2,
+h3 {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  color: var(--ink);
+}
+
+h2 {
+  font-size: 1.15rem;
+}
+
+h3 {
+  font-size: 1.12rem;
+}
+
+.hint {
+  margin: 0.35rem 0 0.95rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.form-row {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
+}
+
+.form-row.two-col {
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.checkbox-row {
+  margin-bottom: 0;
+}
+
+.checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+input,
+select,
+button,
+textarea {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 0.58rem 0.7rem;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+input[type="checkbox"] {
+  width: auto;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #8aa093;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--membrane);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgba(47, 143, 107, 0.32);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+button {
+  cursor: pointer;
+  width: 100%;
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.62rem 0.9rem;
+  margin-top: 0.2rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 6px 14px rgba(31, 110, 81, 0.28);
+  transition: transform 120ms ease, filter 120ms ease, box-shadow 120ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 9px 18px rgba(31, 110, 81, 0.32);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--specimen);
+  outline-offset: 2px;
+}
+
+/* Neutral placeholder state: a result only turns green/red once a
+   calculation has actually run (JS toggles .is-ok / .is-error). */
+.result {
+  margin: 1rem 0 0;
+  padding: 0.7rem 0.78rem;
+  border-radius: 0.6rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--membrane);
+  font-weight: 600;
+  color: var(--muted);
+  word-break: break-word;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.result.is-ok {
+  background: var(--accent-soft);
+  border-color: var(--membrane);
+  border-left-color: var(--good);
+  color: var(--ink);
+}
+
+.result.is-error {
+  background: #fdf1ee;
+  border-color: #e7b7a8;
+  border-left-color: var(--bad);
+  color: #7a2f1c;
+}
+
+.formula-box {
+  margin-top: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.formula-box summary {
+  cursor: pointer;
+  padding: 0.55rem 0.72rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+  list-style: none;
+}
+
+.formula-box summary::marker,
+.formula-box summary::-webkit-details-marker {
+  display: none;
+}
+
+.formula-box summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.45rem;
+  transition: transform 150ms ease;
+}
+
+.formula-box[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.formula {
+  border-top: 1px solid var(--line);
+  padding: 0.75rem;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.formula-title {
+  margin: 0 0 0.3rem;
+  color: var(--accent-strong);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.eq {
+  margin: 0.12rem 0 0.45rem;
+  padding: 0.42rem 0.55rem;
+  border-radius: 0.45rem;
+  background: var(--formula-bg);
+  border: 1px solid var(--line);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.export-wrap {
+  margin-top: 0.8rem;
+}
+
+.export-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.export-head label {
+  font-size: 0.8rem;
+}
+
+.copy-btn {
+  width: auto;
+  flex: none;
+  margin-top: 0;
+  padding: 0.32rem 0.7rem;
+  font-size: 0.78rem;
+  background: linear-gradient(135deg, var(--specimen), #9e4f2c);
+  box-shadow: 0 5px 12px rgba(158, 79, 44, 0.28);
+}
+
+textarea {
+  resize: vertical;
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+textarea[readonly] {
+  background: var(--formula-bg);
+  color: var(--ink);
+  cursor: text;
+}
+
+footer {
+  margin-top: 1.6rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--membrane);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@keyframes fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Collapse the sidebar above the content on narrower screens, with the
+   nav flattened into wrapping chips so it stays compact. */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .sidebar {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .side-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .nav-group {
+    display: contents;
+  }
+
+  .nav-group-title {
+    display: none;
+  }
+
+  .side-nav a {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.3rem 0.72rem;
+  }
+
+  .side-nav a.active {
+    border-color: var(--accent);
+  }
+}
+
+@media (max-width: 720px) {
+  body {
+    padding: 1.3rem 0.85rem 1.8rem;
+  }
+
+  .form-row.two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .hero,
+  .card {
+    animation: none;
+  }
+}
+
+/* Keep the layout usable under Windows High Contrast / forced colors:
+   rely on borders rather than background fills for separation. */
+@media (forced-colors: active) {
+  .card,
+  .topic,
+  .sidebar,
+  .fmt-panel,
+  .formula-box,
+  .result,
+  .eq {
+    border: 1px solid CanvasText;
+  }
+
+  .card::before,
+  .topic-title::before,
+  .bg-shape {
+    display: none;
+  }
+}
