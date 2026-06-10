@@ -488,13 +488,58 @@ button:focus-visible {
 
 .eq {
   margin: 0.12rem 0 0.45rem;
-  padding: 0.42rem 0.55rem;
+  padding: 0.5rem 0.7rem;
   border-radius: 0.45rem;
   background: var(--formula-bg);
   border: 1px solid var(--line);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  /* Proportional, lightly italic type reads like typeset maths rather than code. */
+  font-family: "Outfit", "Segoe UI", system-ui, sans-serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 2.5;
+  color: var(--ink);
   white-space: nowrap;
   overflow-x: auto;
+}
+
+/* Inline maths primitives rendered by mathToHtml() in app.js. */
+.m-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.22em;
+  text-align: center;
+}
+
+.m-num {
+  padding: 0 0.42em;
+  border-bottom: 1.5px solid currentColor;
+}
+
+.m-den {
+  padding: 0.06em 0.42em 0;
+}
+
+.m-sqrt {
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+}
+
+.m-sqrt-sign {
+  margin-right: 0.05em;
+}
+
+.m-sqrt-body {
+  border-top: 1.5px solid currentColor;
+  padding: 0 0.25em;
+}
+
+.eq sup,
+.eq sub {
+  font-size: 0.7em;
+  font-style: normal;
 }
 
 .export-wrap {

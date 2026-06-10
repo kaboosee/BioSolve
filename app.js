@@ -48,6 +48,87 @@ function escapeHtml(text) {
     .replaceAll("'", "&#39;");
 }
 
+// Tiny LaTeX-lite renderer so worked formulas read like real maths (stacked
+// fractions, roots, super/subscripts) instead of flat ASCII. It only supports
+// the handful of constructs the calculators need:
+//   \frac{a}{b}  \sqrt{a}  ^{...}  _{...}
+// Everything else (Greek letters, ×, ≤, →, …) is written as literal Unicode in
+// the formula strings and simply passes through escaped.
+function mathToHtml(src) {
+  let i = 0;
+
+  function skipSpace() {
+    while (i < src.length && src[i] === " ") {
+      i += 1;
+    }
+  }
+
+  // Reads a balanced {...} group (assumes the next non-space char is "{").
+  function readGroup() {
+    skipSpace();
+    if (src[i] !== "{") {
+      // Bare single token after ^/_ , e.g. ^2
+      const ch = src[i] ?? "";
+      i += 1;
+      return ch;
+    }
+    i += 1; // skip "{"
+    let depth = 1;
+    const start = i;
+    while (i < src.length && depth > 0) {
+      if (src[i] === "{") {
+        depth += 1;
+      } else if (src[i] === "}") {
+        depth -= 1;
+        if (depth === 0) {
+          break;
+        }
+      }
+      i += 1;
+    }
+    const inner = src.slice(start, i);
+    i += 1; // skip "}"
+    return inner;
+  }
+
+  let html = "";
+  while (i < src.length) {
+    const ch = src[i];
+
+    if (ch === "\\") {
+      i += 1;
+      let name = "";
+      while (i < src.length && /[a-zA-Z]/.test(src[i])) {
+        name += src[i];
+        i += 1;
+      }
+      if (name === "frac") {
+        const num = readGroup();
+        const den = readGroup();
+        html += `<span class="m-frac"><span class="m-num">${mathToHtml(num)}</span>` +
+          `<span class="m-den">${mathToHtml(den)}</span></span>`;
+      } else if (name === "sqrt") {
+        const body = readGroup();
+        html += `<span class="m-sqrt"><span class="m-sqrt-sign">√</span>` +
+          `<span class="m-sqrt-body">${mathToHtml(body)}</span></span>`;
+      } else {
+        html += escapeHtml(name);
+      }
+    } else if (ch === "^") {
+      i += 1;
+      html += `<sup>${mathToHtml(readGroup())}</sup>`;
+    } else if (ch === "_") {
+      i += 1;
+      html += `<sub>${mathToHtml(readGroup())}</sub>`;
+    } else {
+      html += escapeHtml(ch);
+      i += 1;
+    }
+  }
+
+  return html;
+}
+
 function safeDigits() {
   const raw = parseInt(byId("fmt-digits").value, 10);
   if (!Number.isInteger(raw)) {
@@ -160,7 +241,7 @@ function setFormula(id, sections) {
   target.innerHTML = sections
     .map((section) => {
       const title = `<div class="formula-title">${escapeHtml(section.title)}</div>`;
-      const eqs = section.lines.map((line) => `<div class="eq">${escapeHtml(line)}</div>`).join("");
+      const eqs = section.lines.map((line) => `<div class="eq">${mathToHtml(line)}</div>`).join("");
       return `${title}${eqs}`;
     })
     .join("");
@@ -181,9 +262,9 @@ function calcMolarity() {
 
   setResult("molarity-result", `${formatValue(c)} M`);
   setFormula("molarity-formula", [
-    { title: "Base Formula", lines: ["n = m / Mr", "C = n / V"] },
-    { title: "Rearrangements", lines: ["m = n x Mr", "Mr = m / n", "n = C x V", "V = n / C"] },
-    { title: "Substitution", lines: [`n = ${formatValue(mass)} / ${formatValue(mr)} = ${formatValue(n)} mol`, `C = ${formatValue(n)} / ${formatValue(volume)} = ${formatValue(c)} mol/L`] }
+    { title: "Base Formula", lines: ["n = \\frac{m}{Mr}", "C = \\frac{n}{V}"] },
+    { title: "Rearrangements", lines: ["m = n × Mr", "Mr = \\frac{m}{n}", "n = C × V", "V = \\frac{n}{C}"] },
+    { title: "Substitution", lines: [`n = \\frac{${formatValue(mass)}}{${formatValue(mr)}} = ${formatValue(n)} mol`, `C = \\frac{${formatValue(n)}}{${formatValue(volume)}} = ${formatValue(c)} mol/L`] }
   ]);
 }
 
@@ -207,9 +288,9 @@ function calcDilution() {
 
   setResult("dilution-result", `Use ${formatValue(v1)} mL stock + ${formatValue(diluent)} mL diluent.`);
   setFormula("dilution-formula", [
-    { title: "Base Formula", lines: ["C1V1 = C2V2"] },
-    { title: "Rearrangements", lines: ["V1 = (C2V2)/C1", "C1 = (C2V2)/V1", "C2 = (C1V1)/V2", "V2 = (C1V1)/C2"] },
-    { title: "Substitution", lines: [`V1 = (${formatValue(c2)} x ${formatValue(v2)}) / ${formatValue(c1)} = ${formatValue(v1)} mL`, `Vdiluent = ${formatValue(v2)} - ${formatValue(v1)} = ${formatValue(diluent)} mL`] }
+    { title: "Base Formula", lines: ["C_{1}V_{1} = C_{2}V_{2}"] },
+    { title: "Rearrangements", lines: ["V_{1} = \\frac{C_{2}V_{2}}{C_{1}}", "C_{1} = \\frac{C_{2}V_{2}}{V_{1}}", "C_{2} = \\frac{C_{1}V_{1}}{V_{2}}", "V_{2} = \\frac{C_{1}V_{1}}{C_{2}}"] },
+    { title: "Substitution", lines: [`V_{1} = \\frac{${formatValue(c2)} × ${formatValue(v2)}}{${formatValue(c1)}} = ${formatValue(v1)} mL`, `V_{diluent} = ${formatValue(v2)} − ${formatValue(v1)} = ${formatValue(diluent)} mL`] }
   ]);
 }
 
@@ -233,9 +314,9 @@ function calcGrowth() {
 
   setResult("growth-result", `k = ${formatValue(k)} generations/hour, doubling time = ${formatValue(doublingTime)} hours.`);
   setFormula("growth-formula", [
-    { title: "Base Formula", lines: ["k = log2(Nt/N0) / t", "td = 1 / k"] },
-    { title: "Rearrangements", lines: ["Nt = N0 x 2^(kt)", "N0 = Nt / 2^(kt)", "t = log2(Nt/N0) / k"] },
-    { title: "Substitution", lines: [`k = log2(${formatValue(nt)}/${formatValue(n0)}) / ${formatValue(time)} = ${formatValue(k)} h^-1`, `td = 1 / ${formatValue(k)} = ${formatValue(doublingTime)} h`] }
+    { title: "Base Formula", lines: ["k = \\frac{log_{2}(N_{t}/N_{0})}{t}", "t_{d} = \\frac{1}{k}"] },
+    { title: "Rearrangements", lines: ["N_{t} = N_{0} × 2^{kt}", "N_{0} = \\frac{N_{t}}{2^{kt}}", "t = \\frac{log_{2}(N_{t}/N_{0})}{k}"] },
+    { title: "Substitution", lines: [`k = \\frac{log_{2}(${formatValue(nt)}/${formatValue(n0)})}{${formatValue(time)}} = ${formatValue(k)} h^{-1}`, `t_{d} = \\frac{1}{${formatValue(k)}} = ${formatValue(doublingTime)} h`] }
   ]);
 }
 
@@ -253,9 +334,9 @@ function calcCFU() {
 
   setResult("cfu-result", `${formatValue(cfuPerMl)} CFU/mL`);
   setFormula("cfu-formula", [
-    { title: "Base Formula", lines: ["CFU/mL = (colonies x dilution factor) / volume plated"] },
-    { title: "Rearrangements", lines: ["colonies = (CFU/mL x volume plated)/dilution factor", "dilution factor = (CFU/mL x volume plated)/colonies"] },
-    { title: "Substitution", lines: [`CFU/mL = (${formatValue(colonies)} x ${formatValue(dilutionFactor)}) / ${formatValue(volumePlated)}`, `CFU/mL = ${formatValue(cfuPerMl)}`] }
+    { title: "Base Formula", lines: ["CFU/mL = \\frac{colonies × dilution factor}{volume plated}"] },
+    { title: "Rearrangements", lines: ["colonies = \\frac{CFU/mL × volume plated}{dilution factor}", "dilution factor = \\frac{CFU/mL × volume plated}{colonies}"] },
+    { title: "Substitution", lines: [`CFU/mL = \\frac{${formatValue(colonies)} × ${formatValue(dilutionFactor)}}{${formatValue(volumePlated)}}`, `CFU/mL = ${formatValue(cfuPerMl)}`] }
   ]);
 }
 
@@ -271,9 +352,9 @@ function calcCellCount() {
   const cellsPerMl = avgCount * dilutionFactor * 1e4;
   setResult("cell-result", `${formatValue(cellsPerMl)} cells/mL`);
   setFormula("cell-formula", [
-    { title: "Base Formula", lines: ["cells/mL = average count x dilution factor x 10^4"] },
-    { title: "Rearrangements", lines: ["average count = cells/mL / (dilution factor x 10^4)", "dilution factor = cells/mL / (average count x 10^4)"] },
-    { title: "Substitution", lines: [`cells/mL = ${formatValue(avgCount)} x ${formatValue(dilutionFactor)} x 10^4`, `cells/mL = ${formatValue(cellsPerMl)}`] }
+    { title: "Base Formula", lines: ["cells/mL = average count × dilution factor × 10^{4}"] },
+    { title: "Rearrangements", lines: ["average count = \\frac{cells/mL}{dilution factor × 10^{4}}", "dilution factor = \\frac{cells/mL}{average count × 10^{4}}"] },
+    { title: "Substitution", lines: [`cells/mL = ${formatValue(avgCount)} × ${formatValue(dilutionFactor)} × 10^{4}`, `cells/mL = ${formatValue(cellsPerMl)}`] }
   ]);
 }
 
@@ -293,9 +374,9 @@ function calcOsmoticPressure() {
 
   setResult("osmotic-result", `${formatValue(piAtm)} atm (${formatValue(piKpa)} kPa)`);
   setFormula("osmotic-formula", [
-    { title: "Base Formula", lines: ["Pi = i C R T"] },
-    { title: "Rearrangements", lines: ["C = Pi / (iRT)", "i = Pi / (CRT)", "T = Pi / (iCR)"] },
-    { title: "Substitution", lines: [`Pi = ${formatValue(i)} x ${formatValue(c)} x ${formatValue(r)} x ${formatValue(t)}`, `Pi = ${formatValue(piAtm)} atm = ${formatValue(piKpa)} kPa`] }
+    { title: "Base Formula", lines: ["Π = i C R T"] },
+    { title: "Rearrangements", lines: ["C = \\frac{Π}{iRT}", "i = \\frac{Π}{CRT}", "T = \\frac{Π}{iCR}"] },
+    { title: "Substitution", lines: [`Π = ${formatValue(i)} × ${formatValue(c)} × ${formatValue(r)} × ${formatValue(t)}`, `Π = ${formatValue(piAtm)} atm = ${formatValue(piKpa)} kPa`] }
   ]);
 }
 
@@ -326,9 +407,9 @@ function calcFick() {
     const flux = -d * (dc / dx);
     setResult("fick-result", `J = ${formatValue(flux)} mol/m^2/s`);
     setFormula("fick-formula", [
-      { title: "Base Formula", lines: ["J = -D (dC/dx)"] },
-      { title: "Rearrangements", lines: ["D = -(J dx)/dC", "dC = -(J dx)/D", "dx = -(D dC)/J"] },
-      { title: "Substitution", lines: [`J = -${formatValue(d)} x (${formatValue(dc)}/${formatValue(dx)})`, `J = ${formatValue(flux)} mol/m^2/s`] }
+      { title: "Base Formula", lines: ["J = -D\\frac{ΔC}{Δx}"] },
+      { title: "Rearrangements", lines: ["D = -\\frac{J Δx}{ΔC}", "ΔC = -\\frac{J Δx}{D}", "Δx = -\\frac{D ΔC}{J}"] },
+      { title: "Substitution", lines: [`J = -${formatValue(d)} × \\frac{${formatValue(dc)}}{${formatValue(dx)}}`, `J = ${formatValue(flux)} mol/m^{2}/s`] }
     ]);
     return;
   }
@@ -341,9 +422,9 @@ function calcFick() {
   const diffusionCoefficient = -(j * dx) / dc;
   setResult("fick-result", `D = ${formatValue(diffusionCoefficient)} m^2/s`);
   setFormula("fick-formula", [
-    { title: "Base Formula", lines: ["J = -D (dC/dx)"] },
-    { title: "Rearrangements", lines: ["D = -(J dx)/dC", "J = -D(dC/dx)", "dC = -(J dx)/D", "dx = -(D dC)/J"] },
-    { title: "Substitution", lines: [`D = -(${formatValue(j)} x ${formatValue(dx)}) / ${formatValue(dc)}`, `D = ${formatValue(diffusionCoefficient)} m^2/s`] }
+    { title: "Base Formula", lines: ["J = -D\\frac{ΔC}{Δx}"] },
+    { title: "Rearrangements", lines: ["D = -\\frac{J Δx}{ΔC}", "ΔC = -\\frac{J Δx}{D}", "Δx = -\\frac{D ΔC}{J}"] },
+    { title: "Substitution", lines: [`D = -\\frac{${formatValue(j)} × ${formatValue(dx)}}{${formatValue(dc)}}`, `D = ${formatValue(diffusionCoefficient)} m^{2}/s`] }
   ]);
 }
 
@@ -364,9 +445,9 @@ function calcDarcyFlow() {
 
   setResult("darcy-result", `Q = ${formatValue(q)} m^3/s (${formatValue(qMlPerMin)} mL/min)`);
   setFormula("darcy-formula", [
-    { title: "Base Formula", lines: ["Q = (k A DeltaP) / (mu L)"] },
-    { title: "Rearrangements", lines: ["k = (Q mu L) / (A DeltaP)", "DeltaP = (Q mu L) / (k A)", "mu = (k A DeltaP) / (Q L)"] },
-    { title: "Substitution", lines: [`Q = (${formatValue(k)} x ${formatValue(a)} x ${formatValue(dp)}) / (${formatValue(mu)} x ${formatValue(l)})`, `Q = ${formatValue(q)} m^3/s = ${formatValue(qMlPerMin)} mL/min`] }
+    { title: "Base Formula", lines: ["Q = \\frac{k A ΔP}{μ L}"] },
+    { title: "Rearrangements", lines: ["k = \\frac{Q μ L}{A ΔP}", "ΔP = \\frac{Q μ L}{k A}", "μ = \\frac{k A ΔP}{Q L}"] },
+    { title: "Substitution", lines: [`Q = \\frac{${formatValue(k)} × ${formatValue(a)} × ${formatValue(dp)}}{${formatValue(mu)} × ${formatValue(l)}}`, `Q = ${formatValue(q)} m^{3}/s = ${formatValue(qMlPerMin)} mL/min`] }
   ]);
 }
 
@@ -395,9 +476,9 @@ function calcNernst() {
 
   setResult("nernst-result", `E = ${formatValue(eVolts)} V (${formatValue(eMv)} mV)`);
   setFormula("nernst-formula", [
-    { title: "Base Formula", lines: ["E = (RT / zF) ln([out]/[in])"] },
-    { title: "Rearrangements", lines: ["[out]/[in] = exp(EzF/RT)", "[out] = [in] exp(EzF/RT)", "[in] = [out] / exp(EzF/RT)"] },
-    { title: "Substitution", lines: [`E = (${formatValue(r)} x ${formatValue(tK)}) / (${formatValue(z)} x ${formatValue(f)}) x ln(${formatValue(outConc)}/${formatValue(inConc)})`, `E = ${formatValue(eVolts)} V = ${formatValue(eMv)} mV`] }
+    { title: "Base Formula", lines: ["E = \\frac{RT}{zF} ln\\frac{[out]}{[in]}"] },
+    { title: "Rearrangements", lines: ["\\frac{[out]}{[in]} = e^{EzF/RT}", "[out] = [in] · e^{EzF/RT}", "[in] = \\frac{[out]}{e^{EzF/RT}}"] },
+    { title: "Substitution", lines: [`E = \\frac{${formatValue(r)} × ${formatValue(tK)}}{${formatValue(z)} × ${formatValue(f)}} · ln\\frac{${formatValue(outConc)}}{${formatValue(inConc)}}`, `E = ${formatValue(eVolts)} V = ${formatValue(eMv)} mV`] }
   ]);
 }
 
@@ -417,9 +498,9 @@ function calcSalineMolarity() {
 
   setResult("saline-result", `${formatValue(c)} M`);
   setFormula("saline-formula", [
-    { title: "Base Formula", lines: ["n = m / Mr", "C = n / V"] },
-    { title: "Rearrangements", lines: ["m = n x Mr", "Mr = m / n", "V = n / C", "n = C x V"] },
-    { title: "Substitution", lines: [`n = ${formatValue(mass)} / ${formatValue(mr)} = ${formatValue(n)} mol`, `V = ${formatValue(volumeMl)} mL = ${formatValue(volumeL)} L`, `C = ${formatValue(n)} / ${formatValue(volumeL)} = ${formatValue(c)} mol/L`] }
+    { title: "Base Formula", lines: ["n = \\frac{m}{Mr}", "C = \\frac{n}{V}"] },
+    { title: "Rearrangements", lines: ["m = n × Mr", "Mr = \\frac{m}{n}", "V = \\frac{n}{C}", "n = C × V"] },
+    { title: "Substitution", lines: [`n = \\frac{${formatValue(mass)}}{${formatValue(mr)}} = ${formatValue(n)} mol`, `V = ${formatValue(volumeMl)} mL = ${formatValue(volumeL)} L`, `C = \\frac{${formatValue(n)}}{${formatValue(volumeL)}} = ${formatValue(c)} mol/L`] }
   ]);
 }
 
@@ -444,9 +525,9 @@ function calcSpectrophotometry() {
     const c = a / (epsilon * path);
     setResult("spectro-result", `${formatValue(c)} mol/L`);
     setFormula("spectro-formula", [
-      { title: "Base Formula", lines: ["A = epsilon x l x c"] },
-      { title: "Rearrangements", lines: ["c = A / (epsilon x l)", "epsilon = A / (l x c)", "l = A / (epsilon x c)"] },
-      { title: "Substitution", lines: [`c = ${formatValue(a)} / (${formatValue(epsilon)} x ${formatValue(path)})`, `c = ${formatValue(c)} mol/L`] }
+      { title: "Base Formula", lines: ["A = ε l c"] },
+      { title: "Rearrangements", lines: ["c = \\frac{A}{ε l}", "ε = \\frac{A}{l c}", "l = \\frac{A}{ε c}"] },
+      { title: "Substitution", lines: [`c = \\frac{${formatValue(a)}}{${formatValue(epsilon)} × ${formatValue(path)}}`, `c = ${formatValue(c)} mol/L`] }
     ]);
     return;
   }
@@ -460,9 +541,9 @@ function calcSpectrophotometry() {
     const absorbance = epsilon * path * concentration;
     setResult("spectro-result", `A = ${formatValue(absorbance)}`);
     setFormula("spectro-formula", [
-      { title: "Base Formula", lines: ["A = epsilon x l x c"] },
-      { title: "Rearrangements", lines: ["c = A / (epsilon x l)", "epsilon = A / (l x c)", "l = A / (epsilon x c)"] },
-      { title: "Substitution", lines: [`A = ${formatValue(epsilon)} x ${formatValue(path)} x ${formatValue(concentration)}`, `A = ${formatValue(absorbance)}`] }
+      { title: "Base Formula", lines: ["A = ε l c"] },
+      { title: "Rearrangements", lines: ["c = \\frac{A}{ε l}", "ε = \\frac{A}{l c}", "l = \\frac{A}{ε c}"] },
+      { title: "Substitution", lines: [`A = ${formatValue(epsilon)} × ${formatValue(path)} × ${formatValue(concentration)}`, `A = ${formatValue(absorbance)}`] }
     ]);
     return;
   }
@@ -475,9 +556,9 @@ function calcSpectrophotometry() {
   const transmittance = Math.pow(10, -a) * 100;
   setResult("spectro-result", `${formatValue(transmittance)}% T`);
   setFormula("spectro-formula", [
-    { title: "Base Formula", lines: ["A = -log10(T)", "T = 10^-A"] },
-    { title: "Rearrangements", lines: ["A = -log10(T)"] },
-    { title: "Substitution", lines: [`T = 10^(-${formatValue(a)}) x 100`, `T = ${formatValue(transmittance)}%`] }
+    { title: "Base Formula", lines: ["A = -log_{10}(T)", "T = 10^{-A}"] },
+    { title: "Rearrangements", lines: ["A = -log_{10}(T)"] },
+    { title: "Substitution", lines: [`T = 10^{-${formatValue(a)}} × 100`, `T = ${formatValue(transmittance)}%`] }
   ]);
 }
 
@@ -497,9 +578,9 @@ function calcEnzymeKinetics() {
     const rate = (vmax * substrate) / (km + substrate);
     setResult("enzyme-result", `v = ${formatValue(rate)}`);
     setFormula("enzyme-formula", [
-      { title: "Base Formula", lines: ["v = (Vmax x [S]) / (Km + [S])"] },
-      { title: "Rearrangements", lines: ["Vmax = v(Km + [S])/[S]", "Km = ([S](Vmax - v))/v", "[S] = (vKm)/(Vmax - v)"] },
-      { title: "Substitution", lines: [`v = (${formatValue(vmax)} x ${formatValue(substrate)}) / (${formatValue(km)} + ${formatValue(substrate)})`, `v = ${formatValue(rate)}`] }
+      { title: "Base Formula", lines: ["v = \\frac{V_{max}[S]}{K_{m} + [S]}"] },
+      { title: "Rearrangements", lines: ["V_{max} = \\frac{v(K_{m} + [S])}{[S]}", "K_{m} = \\frac{[S](V_{max} - v)}{v}", "[S] = \\frac{v K_{m}}{V_{max} - v}"] },
+      { title: "Substitution", lines: [`v = \\frac{${formatValue(vmax)} × ${formatValue(substrate)}}{${formatValue(km)} + ${formatValue(substrate)}}`, `v = ${formatValue(rate)}`] }
     ]);
     return;
   }
@@ -525,10 +606,10 @@ function calcEnzymeKinetics() {
 
   setResult("enzyme-result", `Km = ${formatValue(kmFit)}, Vmax = ${formatValue(vmaxFit)}`);
   setFormula("enzyme-formula", [
-    { title: "Base Formula", lines: ["v = (Vmax x [S]) / (Km + [S])"] },
-    { title: "Linearized Fit", lines: ["1/v = (Km/Vmax)(1/[S]) + 1/Vmax"] },
-    { title: "Rearrangements", lines: ["Vmax = 1 / intercept", "Km = slope / intercept"] },
-    { title: "Substitution", lines: [`Fit 1/v against 1/[S] using ${formatValue(validPoints.length)} points`, `Km = ${formatValue(kmFit)}, Vmax = ${formatValue(vmaxFit)}`] }
+    { title: "Base Formula", lines: ["v = \\frac{V_{max}[S]}{K_{m} + [S]}"] },
+    { title: "Linearized Fit", lines: ["\\frac{1}{v} = \\frac{K_{m}}{V_{max}}·\\frac{1}{[S]} + \\frac{1}{V_{max}}"] },
+    { title: "Rearrangements", lines: ["V_{max} = \\frac{1}{intercept}", "K_{m} = \\frac{slope}{intercept}"] },
+    { title: "Substitution", lines: [`Fit 1/v against 1/[S] using ${formatValue(validPoints.length)} points`, `K_{m} = ${formatValue(kmFit)},  V_{max} = ${formatValue(vmaxFit)}`] }
   ]);
 }
 
@@ -548,9 +629,9 @@ function calcChromatography() {
     const veValue = vo + kd * (vt - vo);
     setResult("chrom-result", `Ve = ${formatValue(veValue)} mL`);
     setFormula("chrom-formula", [
-      { title: "Base Formula", lines: ["Ve = Vo + Kd(Vt - Vo)"] },
-      { title: "Rearrangements", lines: ["Kd = (Ve - Vo)/(Vt - Vo)", "Vo = (Ve - KdVt)/(1 - Kd)", "Vt = (Ve - Vo)/Kd + Vo"] },
-      { title: "Substitution", lines: [`Ve = ${formatValue(vo)} + ${formatValue(kd)}(${formatValue(vt)} - ${formatValue(vo)})`, `Ve = ${formatValue(veValue)} mL`] }
+      { title: "Base Formula", lines: ["V_{e} = V_{o} + K_{d}(V_{t} - V_{o})"] },
+      { title: "Rearrangements", lines: ["K_{d} = \\frac{V_{e} - V_{o}}{V_{t} - V_{o}}", "V_{o} = \\frac{V_{e} - K_{d}V_{t}}{1 - K_{d}}", "V_{t} = \\frac{V_{e} - V_{o}}{K_{d}} + V_{o}"] },
+      { title: "Substitution", lines: [`V_{e} = ${formatValue(vo)} + ${formatValue(kd)}(${formatValue(vt)} − ${formatValue(vo)})`, `V_{e} = ${formatValue(veValue)} mL`] }
     ]);
     return;
   }
@@ -564,9 +645,9 @@ function calcChromatography() {
     const kdValue = (ve - vo) / (vt - vo);
     setResult("chrom-result", `Kd = ${formatValue(kdValue)}`);
     setFormula("chrom-formula", [
-      { title: "Base Formula", lines: ["Ve = Vo + Kd(Vt - Vo)"] },
-      { title: "Rearrangements", lines: ["Kd = (Ve - Vo)/(Vt - Vo)", "Ve = Vo + Kd(Vt - Vo)", "Vo = (Ve - KdVt)/(1 - Kd)"] },
-      { title: "Substitution", lines: [`Kd = (${formatValue(ve)} - ${formatValue(vo)}) / (${formatValue(vt)} - ${formatValue(vo)})`, `Kd = ${formatValue(kdValue)}`] }
+      { title: "Base Formula", lines: ["V_{e} = V_{o} + K_{d}(V_{t} - V_{o})"] },
+      { title: "Rearrangements", lines: ["K_{d} = \\frac{V_{e} - V_{o}}{V_{t} - V_{o}}", "V_{o} = \\frac{V_{e} - K_{d}V_{t}}{1 - K_{d}}", "V_{t} = \\frac{V_{e} - V_{o}}{K_{d}} + V_{o}"] },
+      { title: "Substitution", lines: [`K_{d} = \\frac{${formatValue(ve)} − ${formatValue(vo)}}{${formatValue(vt)} − ${formatValue(vo)}}`, `K_{d} = ${formatValue(kdValue)}`] }
     ]);
     return;
   }
@@ -584,9 +665,9 @@ function calcChromatography() {
   const voValue = (ve - kd * vt) / (1 - kd);
   setResult("chrom-result", `Vo = ${formatValue(voValue)} mL`);
   setFormula("chrom-formula", [
-    { title: "Base Formula", lines: ["Ve = Vo + Kd(Vt - Vo)"] },
-    { title: "Rearrangements", lines: ["Vo = (Ve - KdVt)/(1 - Kd)", "Kd = (Ve - Vo)/(Vt - Vo)", "Vt = (Ve - Vo)/Kd + Vo"] },
-    { title: "Substitution", lines: [`Vo = (${formatValue(ve)} - ${formatValue(kd)} x ${formatValue(vt)}) / (1 - ${formatValue(kd)})`, `Vo = ${formatValue(voValue)} mL`] }
+    { title: "Base Formula", lines: ["V_{e} = V_{o} + K_{d}(V_{t} - V_{o})"] },
+    { title: "Rearrangements", lines: ["V_{o} = \\frac{V_{e} - K_{d}V_{t}}{1 - K_{d}}", "K_{d} = \\frac{V_{e} - V_{o}}{V_{t} - V_{o}}", "V_{t} = \\frac{V_{e} - V_{o}}{K_{d}} + V_{o}"] },
+    { title: "Substitution", lines: [`V_{o} = \\frac{${formatValue(ve)} − ${formatValue(kd)} × ${formatValue(vt)}}{1 − ${formatValue(kd)}}`, `V_{o} = ${formatValue(voValue)} mL`] }
   ]);
 }
 
@@ -762,18 +843,18 @@ function calcElisa() {
   const backLabel = useLog ? "10^x" : "x";
   const substitutions = [];
   if (Number.isFinite(u1Abs)) {
-    substitutions.push(`U1: A = ${formatValue(u1Abs)} -> conc = ${formatValue(u1Conc)}`);
+    substitutions.push(`U1: A = ${formatValue(u1Abs)} → conc = ${formatValue(u1Conc)}`);
   }
   if (Number.isFinite(u2Abs)) {
-    substitutions.push(`U2: A = ${formatValue(u2Abs)} -> conc = ${formatValue(u2Conc)}`);
+    substitutions.push(`U2: A = ${formatValue(u2Abs)} → conc = ${formatValue(u2Conc)}`);
   }
   if (Number.isFinite(controlAbs)) {
-    substitutions.push(`Control: A = ${formatValue(controlAbs)} -> conc = ${formatValue(backCalc(controlAbs))}`);
+    substitutions.push(`Control: A = ${formatValue(controlAbs)} → conc = ${formatValue(backCalc(controlAbs))}`);
   }
 
   setFormula("elisa-formula", [
     { title: "Standard Curve (least squares)", lines: [`Linear fit of A vs ${xLabel} using ${formatValue(fitPoints.length)} standards`, blank ? `Blank-corrected by ${formatValue(blank)} absorbance` : "No blank correction applied"] },
-    { title: "Fit", lines: [`A = ${formatValue(fit.slope)} x ${xLabel} + ${formatValue(fit.intercept)}`, `${xLabel} = (A - ${formatValue(fit.intercept)}) / ${formatValue(fit.slope)}`, `conc = ${backLabel}`] },
+    { title: "Fit", lines: [`A = ${formatValue(fit.slope)} × ${xLabel} + ${formatValue(fit.intercept)}`, `${xLabel} = \\frac{A − ${formatValue(fit.intercept)}}{${formatValue(fit.slope)}}`, `conc = ${backLabel}`] },
     { title: "Back-calculation", lines: substitutions.length ? substitutions : ["No unknown or control wells found for the given rows."] }
   ]);
 
