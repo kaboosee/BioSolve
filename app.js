@@ -242,7 +242,7 @@ function setFormula(id, sections) {
     .map((section) => {
       const title = `<div class="formula-title">${escapeHtml(section.title)}</div>`;
       const eqs = section.lines.map((line) => `<div class="eq">${mathToHtml(line)}</div>`).join("");
-      return `${title}${eqs}`;
+      return `<div class="formula-section">${title}<div class="eq-group">${eqs}</div></div>`;
     })
     .join("");
 }
